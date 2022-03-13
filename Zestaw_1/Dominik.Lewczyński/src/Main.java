@@ -1,84 +1,196 @@
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Scanner;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.Math.pow;
 import static java.util.stream.Collectors.toCollection;
 
 public class Main {
 
-    public static ArrayList<String> read_lines(String sciezka) throws FileNotFoundException {
-        ArrayList<String> wynik = new ArrayList<>();
-
-        try (Scanner s = new Scanner(new FileReader(sciezka))) {
-            while (s.hasNext()) {
-                wynik.add(s.nextLine());
+    public static <T> String TablicaDoString(T[][] tab){
+        StringBuilder wynik = new StringBuilder();
+        for (T[] ts : tab) {
+            for (T t : ts) {
+                wynik.append(t);
+                wynik.append(" \n");
             }
-            return wynik;
         }
+        return(wynik.toString());
+    }
+
+    private static Double StringToDouble(String liczba){
+        liczba = liczba.trim();
+        return Double.parseDouble(liczba);
+    }
+
+    private static Integer StringToInt(String liczba){
+        liczba = liczba.trim();
+        return Integer.parseInt(liczba);
+    }
+
+    public static String[][] StringToTablica(String sciezkaDoPliku) throws FileNotFoundException {
+        StringBuilder wynik = new StringBuilder();
+
+        File trescPliku = new File(sciezkaDoPliku);
+        InputStream celowaSciezka = new FileInputStream(trescPliku);
+
+        try{
+            Reader r = new InputStreamReader(celowaSciezka, StandardCharsets.UTF_8);
+            int c;
+            while((c = r.read()) != -1){
+                wynik.append((char) c);
+            }
+        } catch (Exception e){
+            throw new RuntimeException(e);
+        }
+
+        String[] wiersze = wynik.toString().trim().split("\n");
+        String[][] wczytaneDane = new String[wiersze.length][];
+        for(int i = 0; i < wiersze.length; i++){
+            String wiersz = wiersze[i].trim();
+            String[] cyfry = wiersz.split(" ");
+            wczytaneDane[i] = new String[cyfry.length];
+            for(int j = 0; j < cyfry.length; j++){
+                String cyfra = cyfry[j].trim();
+                wczytaneDane[i][j] = cyfra;
+            }
+        }
+        return wczytaneDane;
     }
 
     public static void main(String[] args) throws FileNotFoundException {
         String nazwaPlikuZDanymi = "dane/australian.txt";
         String nazwaPlikuZTypamiAtrybutow = "dane/australian-type.txt";
 
+        String[][] wczytaneDane = StringToTablica(nazwaPlikuZDanymi);
+        String[][] atrType = StringToTablica(nazwaPlikuZTypamiAtrybutow);
+
+        System.out.println("Dane systemu: ");
+
+        String wynik = TablicaDoString(wczytaneDane);
+
+        System.out.print(wynik);
+        System.out.println();
+        System.out.println("Data from file with types: ");
+
+        String wynikAtrType = TablicaDoString(atrType);
+        System.out.print(wynikAtrType);
+
+        //****************** Miejsce na rozwiązanie *********************************//
+
         // Zadanie 3
-        System.out.println("Zadanie 3");
-        ArrayList<String> lines = read_lines(nazwaPlikuZDanymi);
 
         //a)
-        int liczba_obiektow = lines.size();
-        int liczba_atrybutow = lines.get(0).split(" ").length - 1;
-
-        String[] decyzje = new String[liczba_obiektow];
-        for (int i = 0; i < liczba_obiektow; ++i) {
-            decyzje[i] = lines.get(i).split(" ")[liczba_atrybutow];
-        }
-        Object[] decision_classes = Arrays.stream(decyzje).distinct().toArray();
+        System.out.println("Zadanie 3");
         System.out.println("a)");
         System.out.println("Klasy decyzyjne");
-        for (Object i : decision_classes) {
+        int liczba_obiektow = wczytaneDane.length;
+        int liczba_atrybutow = atrType.length;
+
+        String[] decyzje = new String[liczba_obiektow];
+        for (int i = 0; i < liczba_obiektow; i++) {
+            decyzje[i] = wczytaneDane[i][liczba_atrybutow];
+        }
+        Object[] klasyDecyzyjne = Arrays.stream(decyzje).distinct().toArray();
+        for (Object i : klasyDecyzyjne) {
             System.out.println(i);
         }
 
         System.out.println();
 
         // b)
+        System.out.println("b)");
+        System.out.println("liczba obiektów w klasach decyzyjnych");
         HashMap<Object, Integer> liczba_obiektow_w_klasach = new HashMap<>();
-        for (Object i : decision_classes) {
-            int sum = 0;
+        for (Object i : klasyDecyzyjne) {
+            int suma = 0;
             for (int j = 0; j < liczba_obiektow; ++j) {
                 if (decyzje[j].equals(i)) {
-                    ++sum;
+                    ++suma;
                 }
             }
-            liczba_obiektow_w_klasach.put(i, sum);
+            liczba_obiektow_w_klasach.put(i, suma);
         }
-        System.out.println("b)");
-        System.out.println("liczba obiektów w klasach decyzyjnych:");
-        for (Object i : decision_classes) {
+        for (Object i : klasyDecyzyjne) {
             System.out.println(i + " - " + liczba_obiektow_w_klasach.get(i));
         }
 
         System.out.println();
 
         //c)
-        lines = read_lines(nazwaPlikuZTypamiAtrybutow);
+        System.out.println("c)");
+        System.out.println("Minimalne i maksymalne wartości poszczególnych atrybutów");
+        double min = 999999;
+        double max = -999999;
+        for(int i = 0; i < atrType.length; i++){
+            for(int j = 0; j < wczytaneDane.length-1; j++){
+                try{
+                    if(StringToInt(wczytaneDane[j][i]) > max) {
+                        max = StringToInt(wczytaneDane[j][i]);
+                    }
+                    if(StringToInt(wczytaneDane[j][i]) < min) {
+                        min = StringToInt(wczytaneDane[j][i]);
+                    }
+                } catch(NumberFormatException e) {
+                    if(StringToDouble(wczytaneDane[j][i]) > max) {
+                        max = StringToDouble(wczytaneDane[j][i]);
+                    }
+                    if(StringToDouble(wczytaneDane[j][i]) < min) {
+                        min = StringToDouble(wczytaneDane[j][i]);
+                    }
+                } catch(Exception e) {
+                    System.out.println("EROOR" + e);
+                }
+            }
+            System.out.println("Maksymalna wartosc w " + atrType[i][0] + " wynosi: " + max);
+            System.out.println("Minimalna wartosc w " + atrType[i][0] + " wynosi: " + min);
+            min = 999999;
+            max = -999999;
+        }
+
+        System.out.println();
+
+        // d)
+        System.out.println("d)");
+        System.out.println("Dla każdego atrybutu wypisujemy liczbę różnych dostępnych wartości");
+        HashSet<String> pom = new HashSet<>();
+        for(int i = 0; i < atrType.length; i++) {
+            for (int j = 0; j < wczytaneDane.length - 1; j++) {
+                pom.add(wczytaneDane[j][i]);
+            }
+            System.out.println(atrType[i][0] + " - " + pom.size());
+            pom.clear();
+        }
+
+        System.out.println();
+
+        // e)
+        System.out.println("e)");
+        System.out.println("Dla każdego atrybutu wypisujemy listę wszystkich różnych dostępnych wartości");
+        HashSet<String> pom1 = new HashSet<>();
+        for(int i = 0; i < atrType.length; i++) {
+            for (int j = 0; j < wczytaneDane.length - 1; j++) {
+                pom1.add(wczytaneDane[j][i]);
+            }
+            System.out.println(atrType[i][0] + " - " + pom1);
+            pom1.clear();
+        }
+
+        System.out.println();
+
+        // f)
         String numeric = "n";
         String[] nazwy_atrybutow = new String[liczba_atrybutow];
         String[] typy_atrybutow = new String[liczba_atrybutow];
         for (int i = 0; i < liczba_atrybutow; ++i) {
-            nazwy_atrybutow[i] = lines.get(i).split(" ")[0];
-            typy_atrybutow[i] = lines.get(i).split(" ")[1];
+            nazwy_atrybutow[i] = atrType[i][0];
+            typy_atrybutow[i] = atrType[i][1];
         }
 
-        lines = read_lines(nazwaPlikuZDanymi);
         String[][] atrybuty = new String[liczba_obiektow][liczba_atrybutow];
         for (int i = 0; i < liczba_obiektow; ++i) {
-            String[] line = lines.get(i).split(" ");
+            String[] line = wczytaneDane[i];
             atrybuty[i] = Arrays.copyOfRange(line, 0, liczba_atrybutow);
         }
 
@@ -87,79 +199,37 @@ public class Main {
             if (typy_atrybutow[i].equals(numeric)) {
                 indeks_atrybutow_liczbowych.add(i);
             }
-        double[][] numeric_attributes = new double[liczba_obiektow][indeks_atrybutow_liczbowych.size()];
+        double[][] atrybuty_typu_numeric = new double[liczba_obiektow][indeks_atrybutow_liczbowych.size()];
         for (int i = 0; i < liczba_obiektow; ++i)
             for (int j = 0; j < indeks_atrybutow_liczbowych.size(); ++j)
-                numeric_attributes[i][j] = Double.parseDouble(atrybuty[i][indeks_atrybutow_liczbowych.get(j)]);
+                atrybuty_typu_numeric[i][j] = Double.parseDouble(atrybuty[i][indeks_atrybutow_liczbowych.get(j)]);
 
-        double[] max = new double[numeric_attributes[0].length];
-        double[] min = new double[numeric_attributes[0].length];
-        for (int i = 0; i < numeric_attributes[0].length; ++i) {
-            max[i] = numeric_attributes[0][i];
-            min[i] = numeric_attributes[0][i];
-        }
-        for (int i = 0; i < liczba_obiektow; ++i)
-            for (int j = 0; j < numeric_attributes[0].length; ++j) {
-                if (numeric_attributes[i][j] > max[j]) {
-                    max[j] = numeric_attributes[i][j];
-                }
-                if (numeric_attributes[i][j] < min[j]) {
-                    min[j] = numeric_attributes[i][j];
-                }
-            }
-
-        System.out.println("c)");
-        System.out.println("minimalne i maksymalne wartości poszczególnych atrybutów:");
-        for (int i = 0; i < numeric_attributes[0].length; ++i) {
-            System.out.println(nazwy_atrybutow[indeks_atrybutow_liczbowych.get(i)] + ":");
-            System.out.println("max - " + max[i]);
-            System.out.println("min - " + min[i]);
-        }
-
-        System.out.println();
-
-        // d) oraz e)
-        ArrayList<ArrayList<String>> different_available_values = new ArrayList<>();
+        AtomicReference<ArrayList<ArrayList<String>>> different_available_values = new AtomicReference<>(new ArrayList<>());
         for (int i = 0; i < liczba_atrybutow; ++i) {
-            String[] attribute = new String[liczba_obiektow];
+            String[] atrybut = new String[liczba_obiektow];
             for (int j = 0; j < liczba_obiektow; ++j)
-                attribute[j] = atrybuty[j][i];
-            different_available_values.add(Arrays.stream(attribute).distinct().collect(toCollection(ArrayList::new)));
+                atrybut[j] = atrybuty[j][i];
+            different_available_values.get().add(Arrays.stream(atrybut).distinct().collect(toCollection(ArrayList::new)));
         }
-
-        System.out.println("d)");
-        System.out.println("liczba różnych dostępnych wartości:");
-        for (int i = 0; i < liczba_atrybutow; ++i) {
-            System.out.println(nazwy_atrybutow[i] + " - " + different_available_values.get(i).size());
-        }
-        System.out.println("e)");
-        System.out.println("wszystkie różne dostępne wartości:");
-        for (int i = 0; i < liczba_atrybutow; ++i) {
-            System.out.println(nazwy_atrybutow[i] + " - " + different_available_values.get(i));
-        }
-
-        System.out.println();
-
-        // f)
-        System.out.println("f)");
-        System.out.println("odchylenie standardowe dla poszczególnych atrybutów w całym systemie:");
-        for (int i = 0; i < numeric_attributes[0].length; ++i) {
-            double[] array = new double[liczba_obiektow];
+        System.out.println("f");
+        System.out.println("Odchylenie standardowe dla poszczególnych atrybutów w całym systemie");
+        for (int i = 0; i < atrybuty_typu_numeric[0].length; ++i) {
+            double[] tablica = new double[liczba_obiektow];
             for (int j = 0; j < liczba_obiektow; ++j)
-                array[j] = numeric_attributes[j][i];
-            System.out.println(nazwy_atrybutow[indeks_atrybutow_liczbowych.get(i)] + " - " + odchylenie_standardowe(array));
+                tablica[j] = atrybuty_typu_numeric[j][i];
+            System.out.println(nazwy_atrybutow[indeks_atrybutow_liczbowych.get(i)] + " - " + odchylenie_standardowe(tablica));
         }
-        System.out.println("odchylenie standardowe dla poszczególnych atrybutów w klasach decyzyjnych:");
-        for (Object d : decision_classes) {
+        System.out.println("Odchylenie standardowe dla poszczególnych atrybutów w klasach decyzyjnych");
+        for (Object d : klasyDecyzyjne) {
             System.out.println(d);
-            for (int i = 0; i < numeric_attributes[0].length; ++i) {
-                double[] array = new double[liczba_obiektow_w_klasach.get(d)];
+            for (int i = 0; i < atrybuty_typu_numeric[0].length; ++i) {
+                double[] tablica = new double[liczba_obiektow_w_klasach.get(d)];
                 int index = 0;
                 for (int j = 0; j < liczba_obiektow; ++j)
                     if (decyzje[j].equals(d)) {
-                        array[index++] = numeric_attributes[j][i];
+                        tablica[index++] = atrybuty_typu_numeric[j][i];
                     }
-                System.out.println(nazwy_atrybutow[indeks_atrybutow_liczbowych.get(i)] + " - " + odchylenie_standardowe(array));
+                System.out.println(nazwy_atrybutow[indeks_atrybutow_liczbowych.get(i)] + " - " + odchylenie_standardowe(tablica));
             }
         }
 
@@ -169,20 +239,34 @@ public class Main {
         // a)
         System.out.println("Zadanie 4");
         System.out.println("a)");
-        for (int i = 0; i < numeric_attributes[0].length; ++i) {
-            int[] array = generate_missing_values(liczba_obiektow);
+        for (int i = 0; i < atrybuty_typu_numeric[0].length; ++i) {
+            int[] array = generowanie_brakujacych_wartosci(liczba_obiektow);
             Arrays.sort(array);
             for (int j : array)
                 atrybuty[j][indeks_atrybutow_liczbowych.get(i)] = "?";
         }
 
-        for (int i = 0; i < numeric_attributes[0].length; ++i) {
-            String[] wynik = new String[liczba_obiektow];
+        for (int i = 0; i < atrybuty_typu_numeric[0].length; ++i) {
+            String[] wynik1 = new String[liczba_obiektow];
             for (int j = 0; j < liczba_obiektow; ++j) {
-                wynik[j] = atrybuty[j][indeks_atrybutow_liczbowych.get(i)];
+                wynik1[j] = atrybuty[j][indeks_atrybutow_liczbowych.get(i)];
             }
-            System.out.println(nazwy_atrybutow[indeks_atrybutow_liczbowych.get(i)] + " - " + most_popular(wynik));
+            System.out.println(nazwy_atrybutow[indeks_atrybutow_liczbowych.get(i)] + " - " + najbardziej_popularny(wynik1));
         }
+
+        System.out.println();
+        // b)
+        System.out.println("b)");
+
+        System.out.println();
+        // c)
+        System.out.println("c)");
+
+        System.out.println();
+        // d)
+        System.out.println("d)");
+
+        //****************** Koniec miejsca na rozwiązanie ********************************//
     }
 
     private static double odchylenie_standardowe(double[] array) {
@@ -196,37 +280,38 @@ public class Main {
         return wynik;
     }
 
-    public static int [] generate_missing_values(int number_of_objects) {
-        int [] array = new int[(int)(0.1*number_of_objects)];
-        for(int i = 0; i < array.length; ++i) {
-            int value = (int) (Math.random()*number_of_objects);
+    public static int [] generowanie_brakujacych_wartosci(int numer_objektu) {
+        int [] tab = new int[(int)(0.1*numer_objektu)];
+        for(int i = 0; i < tab.length; ++i) {
+            int value = (int) (Math.random()*numer_objektu);
             boolean unique = true;
             for(int j = 0; j < i; ++j)
-                if (array[j] == value) {
+                if (tab[j] == value) {
                     unique = false;
                     break;
                 }
             if(unique)
-                array[i] = value;
+                tab[i] = value;
             else
                 --i;
         }
-        return array;
+        return tab;
     }
 
-    public static String most_popular(String [] array) {
-        HashMap<String, Integer> counter = new HashMap<>();
-        for(String i : array)
+    public static String najbardziej_popularny(String [] tab) {
+        HashMap<String, Integer> pom = new HashMap<>();
+        for(String i : tab)
             if(!i.equals("?"))
-                if(counter.get(i) == null)
-                    counter.put(i, 0);
+                if(pom.get(i) == null)
+                    pom.put(i, 0);
                 else
-                    counter.replace(i, counter.get(i)+1);
-        int most_popular_number_of_appearances = 0;
-        String most_popular_value = "";
-        for(String i : counter.keySet())
-            if(counter.get(i) > most_popular_number_of_appearances)
-                most_popular_value = i;
-        return most_popular_value;
+                    pom.replace(i, pom.get(i)+1);
+        int najpopularniejsza_liczba_wystapienia = 0;
+        String najbardziej_popularna_wartosc = "";
+        for(String i : pom.keySet())
+            if(pom.get(i) > najpopularniejsza_liczba_wystapienia)
+                najbardziej_popularna_wartosc = i;
+        return najbardziej_popularna_wartosc;
     }
+
 }
