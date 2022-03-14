@@ -1,6 +1,10 @@
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.Math.pow;
@@ -29,23 +33,9 @@ public class Main {
         return Integer.parseInt(liczba);
     }
 
-    public static String[][] StringToTablica(String sciezkaDoPliku) throws FileNotFoundException {
-        StringBuilder wynik = new StringBuilder();
-
-        File trescPliku = new File(sciezkaDoPliku);
-        InputStream celowaSciezka = new FileInputStream(trescPliku);
-
-        try{
-            Reader r = new InputStreamReader(celowaSciezka, StandardCharsets.UTF_8);
-            int c;
-            while((c = r.read()) != -1){
-                wynik.append((char) c);
-            }
-        } catch (Exception e){
-            throw new RuntimeException(e);
-        }
-
-        String[] wiersze = wynik.toString().trim().split("\n");
+    public static String[][] StringToTablica(String sciezkaDoPliku) throws IOException {
+        String trescPliku = Files.readString(Path.of(sciezkaDoPliku));
+        String[] wiersze = trescPliku.trim().split("\n");
         String[][] wczytaneDane = new String[wiersze.length][];
         for(int i = 0; i < wiersze.length; i++){
             String wiersz = wiersze[i].trim();
@@ -59,32 +49,32 @@ public class Main {
         return wczytaneDane;
     }
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws IOException {
         String nazwaPlikuZDanymi = "dane/australian.txt";
         String nazwaPlikuZTypamiAtrybutow = "dane/australian-type.txt";
 
         String[][] wczytaneDane = StringToTablica(nazwaPlikuZDanymi);
         String[][] atrType = StringToTablica(nazwaPlikuZTypamiAtrybutow);
 
-        System.out.println("Dane systemu: ");
+        System.out.println("Dane systemu:");
 
         String wynik = TablicaDoString(wczytaneDane);
 
         System.out.print(wynik);
         System.out.println();
-        System.out.println("Data from file with types: ");
+        System.out.println("Dane pliku z typami:");
 
         String wynikAtrType = TablicaDoString(atrType);
         System.out.print(wynikAtrType);
 
         //****************** Miejsce na rozwiązanie *********************************//
 
-        // Zadanie 3
+        //Zadanie 3
 
         //a)
         System.out.println("Zadanie 3");
         System.out.println("a)");
-        System.out.println("Klasy decyzyjne");
+        System.out.println("Wypisujemy istniejące w systemie symbole klas decyzyjnych");
         int liczba_obiektow = wczytaneDane.length;
         int liczba_atrybutow = atrType.length;
 
@@ -101,13 +91,13 @@ public class Main {
 
         // b)
         System.out.println("b)");
-        System.out.println("liczba obiektów w klasach decyzyjnych");
+        System.out.println("Wielkości klas decyzyjnych (liczby obiektów w klasach)");
         HashMap<Object, Integer> liczba_obiektow_w_klasach = new HashMap<>();
         for (Object i : klasyDecyzyjne) {
             int suma = 0;
-            for (int j = 0; j < liczba_obiektow; ++j) {
+            for (int j = 0; j < liczba_obiektow; j++) {
                 if (decyzje[j].equals(i)) {
-                    ++suma;
+                    suma++;
                 }
             }
             liczba_obiektow_w_klasach.put(i, suma);
@@ -211,14 +201,24 @@ public class Main {
                 atrybut[j] = atrybuty[j][i];
             different_available_values.get().add(Arrays.stream(atrybut).distinct().collect(toCollection(ArrayList::new)));
         }
+
         System.out.println("f");
         System.out.println("Odchylenie standardowe dla poszczególnych atrybutów w całym systemie");
         for (int i = 0; i < atrybuty_typu_numeric[0].length; ++i) {
             double[] tablica = new double[liczba_obiektow];
-            for (int j = 0; j < liczba_obiektow; ++j)
+            for (int j = 0; j < liczba_obiektow; ++j) {
                 tablica[j] = atrybuty_typu_numeric[j][i];
-            System.out.println(nazwy_atrybutow[indeks_atrybutow_liczbowych.get(i)] + " - " + odchylenie_standardowe(tablica));
+            }
+            double odchylenie_standardowe = 0;
+            double suma = 0;
+            for(double k : tablica) {
+                suma = suma + k;
+                odchylenie_standardowe = odchylenie_standardowe + pow(k, 2);
+            }
+            odchylenie_standardowe = (odchylenie_standardowe/tablica.length) - pow((suma/tablica.length), 2);
+            System.out.println(nazwy_atrybutow[indeks_atrybutow_liczbowych.get(i)] + " - " + odchylenie_standardowe);
         }
+
         System.out.println("Odchylenie standardowe dla poszczególnych atrybutów w klasach decyzyjnych");
         for (Object d : klasyDecyzyjne) {
             System.out.println(d);
@@ -229,7 +229,14 @@ public class Main {
                     if (decyzje[j].equals(d)) {
                         tablica[index++] = atrybuty_typu_numeric[j][i];
                     }
-                System.out.println(nazwy_atrybutow[indeks_atrybutow_liczbowych.get(i)] + " - " + odchylenie_standardowe(tablica));
+                double odchylenie_standardowe1 = 0;
+                double suma = 0;
+                for(double k : tablica) {
+                    suma = suma + k;
+                    odchylenie_standardowe1 = odchylenie_standardowe1 + pow(k, 2);
+                }
+                odchylenie_standardowe1 = (odchylenie_standardowe1/tablica.length) - pow((suma/tablica.length), 2);
+                System.out.println(nazwy_atrybutow[indeks_atrybutow_liczbowych.get(i)] + " - " + odchylenie_standardowe1);
             }
         }
 
@@ -240,9 +247,9 @@ public class Main {
         System.out.println("Zadanie 4");
         System.out.println("a)");
         for (int i = 0; i < atrybuty_typu_numeric[0].length; ++i) {
-            int[] array = generowanie_brakujacych_wartosci(liczba_obiektow);
-            Arrays.sort(array);
-            for (int j : array)
+            int[] tab = generowanie_brakujacych_wartosci(liczba_obiektow);
+            Arrays.sort(tab);
+            for (int j : tab)
                 atrybuty[j][indeks_atrybutow_liczbowych.get(i)] = "?";
         }
 
@@ -257,6 +264,7 @@ public class Main {
         System.out.println();
         // b)
         System.out.println("b)");
+        System.out.println("Znornalizuj atrybuty numeryczne wybranego systemu na przedziały: <-1, 1>, <0, 1>, <-10, 10>");
 
         System.out.println();
         // c)
@@ -269,23 +277,12 @@ public class Main {
         //****************** Koniec miejsca na rozwiązanie ********************************//
     }
 
-    private static double odchylenie_standardowe(double[] array) {
-        double wynik = 0;
-        double suma = 0;
-        for(double i : array) {
-            suma = suma + i;
-            wynik = wynik + pow(i, 2);
-        }
-        wynik = (wynik/array.length) - pow((suma/array.length), 2);
-        return wynik;
-    }
-
     public static int [] generowanie_brakujacych_wartosci(int numer_objektu) {
         int [] tab = new int[(int)(0.1*numer_objektu)];
-        for(int i = 0; i < tab.length; ++i) {
+        for(int i = 0; i < tab.length; i++) {
             int value = (int) (Math.random()*numer_objektu);
             boolean unique = true;
-            for(int j = 0; j < i; ++j)
+            for(int j = 0; j < i; j++)
                 if (tab[j] == value) {
                     unique = false;
                     break;
@@ -293,7 +290,7 @@ public class Main {
             if(unique)
                 tab[i] = value;
             else
-                --i;
+                i++;
         }
         return tab;
     }
@@ -313,5 +310,4 @@ public class Main {
                 najbardziej_popularna_wartosc = i;
         return najbardziej_popularna_wartosc;
     }
-
 }
