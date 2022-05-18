@@ -1,0 +1,6 @@
+C:\Users\JacekL\Documents\Visual Studio 2015\Projects\DaneZPlikuConsole\DaneZPlikuConsole\bin\Debug\DaneZPlikuConsole.exe.config
+C:\Users\JacekL\Documents\Visual Studio 2015\Projects\DaneZPlikuConsole\DaneZPlikuConsole\bin\Debug\DaneZPlikuConsole.exe
+C:\Users\JacekL\Documents\Visual Studio 2015\Projects\DaneZPlikuConsole\DaneZPlikuConsole\bin\Debug\DaneZPlikuConsole.pdb
+C:\Users\JacekL\Documents\Visual Studio 2015\Projects\DaneZPlikuConsole\DaneZPlikuConsole\obj\Debug\DaneZPlikuConsole.csprojResolveAssemblyReference.cache
+C:\Users\JacekL\Documents\Visual Studio 2015\Projects\DaneZPlikuConsole\DaneZPlikuConsole\obj\Debug\DaneZPlikuConsole.exe
+C:\Users\JacekL\Documents\Visual Studio 2015\Projects\DaneZPlikuConsole\DaneZPlikuConsole\obj\Debug\DaneZPlikuConsole.pdb
